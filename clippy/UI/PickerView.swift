@@ -169,3 +169,49 @@ private struct RowView: View {
         .animation(.easeInOut(duration: 0.06), value: isSelected)
     }
 }
+
+#if DEBUG
+private enum PickerViewPreviewFactory {
+    static func makeMonitor() -> ClipboardMonitor {
+        let monitor = ClipboardMonitor()
+        monitor.history = [
+            "git commit -m \"Polish neon picker visuals\"",
+            "https://example.com/a/very/long/url/that/should/truncate/in/the/picker/row/for/layout-testing",
+            "Refactor selection state into shared observable object",
+            "Design notes: brighter cyan highlights + softer shadows",
+            "Short item"
+        ]
+        return monitor
+    }
+
+    static func makeState(selectedIndex: Int) -> PickerState {
+        let state = PickerState()
+        state.selectedIndex = selectedIndex
+        return state
+    }
+}
+
+#Preview("Default") {
+    PickerView(
+        monitor: PickerViewPreviewFactory.makeMonitor(),
+        state: PickerViewPreviewFactory.makeState(selectedIndex: 0),
+        onSelect: { _ in },
+        onDismiss: {}
+    )
+    .frame(width: 480)
+    .padding(20)
+    .background(Color.black)
+}
+
+#Preview("Selected Middle Item") {
+    PickerView(
+        monitor: PickerViewPreviewFactory.makeMonitor(),
+        state: PickerViewPreviewFactory.makeState(selectedIndex: 2),
+        onSelect: { _ in },
+        onDismiss: {}
+    )
+    .frame(width: 480)
+    .padding(20)
+    .background(Color.black)
+}
+#endif

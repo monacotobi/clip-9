@@ -11,6 +11,8 @@ class PickerWindow: NSPanel {
     private let clipboardMonitor: ClipboardMonitor
     private let onSelect: (String) -> Void
     private let onDismiss: () -> Void
+    private let pickerWidth: CGFloat = 480
+    private let outerPadding: CGFloat = 8
 
     init(
         clipboardMonitor: ClipboardMonitor,
@@ -22,7 +24,7 @@ class PickerWindow: NSPanel {
         self.onDismiss = onDismiss
 
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 60),
+            contentRect: NSRect(x: 0, y: 0, width: pickerWidth + outerPadding * 2, height: 60),
             styleMask: [.nonactivatingPanel, .fullSizeContentView, .borderless],
             backing: .buffered,
             defer: false
@@ -49,6 +51,10 @@ class PickerWindow: NSPanel {
             onSelect: { [weak self] text in self?.onSelect(text) },
             onDismiss: { [weak self] in self?.onDismiss() }
         )
+        .padding(outerPadding)
+        .background(Color.black.opacity(0.98))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
         contentView = NSHostingView(rootView: view)
     }
 
@@ -60,9 +66,10 @@ class PickerWindow: NSPanel {
 
         if let screen = NSScreen.main {
             let sf = screen.visibleFrame
-            let ww: CGFloat = 480
+            let ww: CGFloat = pickerWidth + outerPadding * 2
             // header(46) + separator(5) + rows(40ea) + footer(28)
-            let wh: CGFloat = min(CGFloat(46 + 5 + clipboardMonitor.history.count * 40 + 28), 440)
+            let contentHeight = min(CGFloat(46 + 5 + clipboardMonitor.history.count * 40 + 28), 440)
+            let wh: CGFloat = contentHeight + outerPadding * 2
             setFrame(NSRect(
                 x: sf.origin.x + (sf.width - ww) / 2,
                 y: sf.origin.y + (sf.height - wh) / 2,
