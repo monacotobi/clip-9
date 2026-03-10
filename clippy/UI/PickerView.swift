@@ -1,13 +1,17 @@
 import SwiftUI
 
-// MARK: - Colors
+// MARK: - Palette
 
-private extension Color {
-    static let clippyBg     = Color(red: 0.039, green: 0.059, blue: 0.039) // #0A0F0A
-    static let clippyAccent = Color(red: 0.0,   green: 1.0,   blue: 0.533) // #00FF88
-    static let clippyDim    = Color(red: 0.533, green: 0.533, blue: 0.533) // #888
-    static let clippyBorder = Color(red: 0.15,  green: 0.22,  blue: 0.15)
+private enum Arcade {
+    static let bg       = Color(red: 0.031, green: 0.031, blue: 0.047)  // #080812
+    static let pink     = Color(red: 1.0,   green: 0.125, blue: 0.471)  // #FF2078
+    static let cyan     = Color(red: 0.0,   green: 0.898, blue: 1.0)    // #00E5FF
+    static let yellow   = Color(red: 1.0,   green: 0.902, blue: 0.0)    // #FFE600
+    static let dimText  = Color(red: 0.267, green: 0.267, blue: 0.333)  // #444455
+    static let rowGlow  = Color(red: 1.0,   green: 0.125, blue: 0.471).opacity(0.08)
 }
+
+private let arcadeFont = "Courier New"
 
 // MARK: - PickerView
 
@@ -17,45 +21,100 @@ struct PickerView: View {
     let onSelect: (String) -> Void
     let onDismiss: () -> Void
 
+    // Blinking cursor ticker
+    @State private var cursorOn = true
+    private let blinker = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text("◈  CLIPBOARD")
-                    .font(.custom("SF Mono", size: 11).weight(.semibold))
-                    .foregroundColor(.clippyAccent)
-                    .tracking(2)
-                Spacer()
-                Text("\(monitor.history.count) item\(monitor.history.count == 1 ? "" : "s")")
-                    .font(.custom("SF Mono", size: 11))
-                    .foregroundColor(.clippyDim)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            headerView
+            separatorView
+            itemsView
+            footerView
+        }
+        .background(Arcade.bg)
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Arcade.pink, lineWidth: 1.5)
+        )
+        // Outer neon glow
+        .shadow(color: Arcade.pink.opacity(0.45), radius: 12, x: 0, y: 0)
+        .shadow(color: Arcade.pink.opacity(0.2),  radius: 28, x: 0, y: 0)
+        .onReceive(blinker) { _ in cursorOn.toggle() }
+        .onReceive(monitor.$history) { _ in state.selectedIndex = 0 }
+    }
 
-            Divider().background(Color.clippyBorder)
+    // MARK: Header
 
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 0) {
-                    ForEach(Array(monitor.history.enumerated()), id: \.offset) { index, text in
-                        RowView(index: index, text: text, isSelected: state.selectedIndex == index)
-                            .onTapGesture {
-                                state.selectedIndex = index
-                                onSelect(text)
-                            }
+    private var headerView: some View {
+        HStack(alignment: .center, spacing: 0) {
+            Text("📎 CLIPPY")
+                .font(.custom(arcadeFont, size: 13).bold())
+                .foregroundColor(Arcade.cyan)
+                .tracking(3)
+                // Cyan text glow
+                .shadow(color: Arcade.cyan.opacity(0.8), radius: 6)
+
+            Spacer()
+
+            Text("\(monitor.history.count) ITEM\(monitor.history.count == 1 ? "" : "S")")
+                .font(.custom(arcadeFont, size: 11).bold())
+                .foregroundColor(Arcade.pink)
+                .tracking(1)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+    }
+
+    // MARK: Separator — double-stroke arcade style
+
+    private var separatorView: some View {
+        VStack(spacing: 2) {
+            Rectangle().fill(Arcade.pink).frame(height: 1)
+            Rectangle().fill(Arcade.pink.opacity(0.35)).frame(height: 1)
+        }
+        .shadow(color: Arcade.pink.opacity(0.6), radius: 4)
+    }
+
+    // MARK: Items
+
+    private var itemsView: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 0) {
+                ForEach(Array(monitor.history.enumerated()), id: \.offset) { index, text in
+                    RowView(
+                        index: index,
+                        text: text,
+                        isSelected: state.selectedIndex == index,
+                        cursorOn: cursorOn
+                    )
+                    .onTapGesture {
+                        state.selectedIndex = index
+                        onSelect(text)
                     }
                 }
             }
         }
-        .background(Color.clippyBg)
-        .cornerRadius(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.clippyBorder, lineWidth: 1)
-        )
-        .onReceive(monitor.$history) { _ in
-            state.selectedIndex = 0
+    }
+
+    // MARK: Footer — insert coin hint
+
+    private var footerView: some View {
+        HStack {
+            Text("↑↓ MOVE")
+            Text("·")
+            Text("1-9 JUMP")
+            Text("·")
+            Text("ENTER SELECT")
+            Text("·")
+            Text("ESC QUIT")
         }
+        .font(.custom(arcadeFont, size: 9).bold())
+        .foregroundColor(Arcade.dimText)
+        .tracking(1)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
     }
 }
 
@@ -65,39 +124,48 @@ private struct RowView: View {
     let index: Int
     let text: String
     let isSelected: Bool
+    let cursorOn: Bool
 
-    private var label: String { index < 9 ? "\(index + 1)" : "0" }
+    private var numberLabel: String { index < 9 ? "\(index + 1)" : "0" }
 
     var body: some View {
         HStack(spacing: 0) {
+            // Left neon border
             Rectangle()
-                .fill(isSelected ? Color.clippyAccent : Color.clear)
+                .fill(isSelected ? Arcade.pink : Color.clear)
                 .frame(width: 3)
+                .shadow(color: isSelected ? Arcade.pink.opacity(0.9) : .clear, radius: 4)
 
-            HStack(spacing: 10) {
-                Text(label)
-                    .font(.custom("SF Mono", size: 13))
-                    .foregroundColor(isSelected ? .clippyAccent : .clippyDim)
-                    .frame(width: 14, alignment: .trailing)
+            HStack(spacing: 0) {
+                // Blinking cursor
+                Text(isSelected && cursorOn ? "►" : " ")
+                    .font(.custom(arcadeFont, size: 12).bold())
+                    .foregroundColor(Arcade.pink)
+                    .shadow(color: Arcade.pink.opacity(0.8), radius: 4)
+                    .frame(width: 16, alignment: .center)
 
-                Text(isSelected ? "▶" : " ")
-                    .font(.custom("SF Mono", size: 13))
-                    .foregroundColor(.clippyAccent)
-                    .frame(width: 14)
+                // Number
+                Text(numberLabel)
+                    .font(.custom(arcadeFont, size: 12).bold())
+                    .foregroundColor(isSelected ? Arcade.yellow : Arcade.dimText)
+                    .frame(width: 16, alignment: .trailing)
+                    .padding(.trailing, 10)
 
+                // Content — keep original case for accurate paste preview
                 Text(text)
-                    .font(.custom("SF Mono", size: 13))
-                    .foregroundColor(isSelected ? .white : .clippyDim)
+                    .font(.custom(arcadeFont, size: 12).bold())
+                    .foregroundColor(isSelected ? .white : Arcade.dimText)
                     .lineLimit(1)
                     .truncationMode(.tail)
+                    .shadow(color: isSelected ? Color.white.opacity(0.15) : .clear, radius: 3)
 
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
         }
-        .frame(height: 44)
-        .background(isSelected ? Color.clippyAccent.opacity(0.07) : Color.clear)
-        .animation(.easeInOut(duration: 0.08), value: isSelected)
+        .frame(height: 40)
+        .background(isSelected ? Arcade.rowGlow : Color.clear)
+        .animation(.easeInOut(duration: 0.06), value: isSelected)
     }
 }

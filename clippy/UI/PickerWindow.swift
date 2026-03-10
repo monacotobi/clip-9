@@ -61,7 +61,8 @@ class PickerWindow: NSPanel {
         if let screen = NSScreen.main {
             let sf = screen.visibleFrame
             let ww: CGFloat = 480
-            let wh: CGFloat = min(CGFloat(44 + clipboardMonitor.history.count * 44), 420)
+            // header(46) + separator(5) + rows(40ea) + footer(28)
+            let wh: CGFloat = min(CGFloat(46 + 5 + clipboardMonitor.history.count * 40 + 28), 440)
             setFrame(NSRect(
                 x: sf.origin.x + (sf.width - ww) / 2,
                 y: sf.origin.y + (sf.height - wh) / 2,
