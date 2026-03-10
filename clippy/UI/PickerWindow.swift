@@ -1,13 +1,22 @@
 import AppKit
 import SwiftUI
 
+// Shared state between NSPanel (key events) and SwiftUI (rendering)
+class PickerState: ObservableObject {
+    @Published var selectedIndex: Int = 0
+}
+
 class PickerWindow: NSPanel {
+    let pickerState = PickerState()
     private let clipboardMonitor: ClipboardMonitor
     private let onSelect: (String) -> Void
     private let onDismiss: () -> Void
-    private var hostingView: NSHostingView<PickerView>?
 
-    init(clipboardMonitor: ClipboardMonitor, onSelect: @escaping (String) -> Void, onDismiss: @escaping () -> Void) {
+    init(
+        clipboardMonitor: ClipboardMonitor,
+        onSelect: @escaping (String) -> Void,
+        onDismiss: @escaping () -> Void
+    ) {
         self.clipboardMonitor = clipboardMonitor
         self.onSelect = onSelect
         self.onDismiss = onDismiss
@@ -30,35 +39,34 @@ class PickerWindow: NSPanel {
         setupContent()
     }
 
-    private func setupContent() {
-        let pickerView = PickerView(
-            monitor: clipboardMonitor,
-            onSelect: { [weak self] text in
-                self?.onSelect(text)
-            },
-            onDismiss: { [weak self] in
-                self?.onDismiss()
-            }
-        )
+    // NSPanel can become key without activating the app
+    override var canBecomeKey: Bool { true }
 
-        let hosting = NSHostingView(rootView: pickerView)
-        hosting.autoresizingMask = [.width, .height]
-        contentView = hosting
-        hostingView = hosting
+    private func setupContent() {
+        let view = PickerView(
+            monitor: clipboardMonitor,
+            state: pickerState,
+            onSelect: { [weak self] text in self?.onSelect(text) },
+            onDismiss: { [weak self] in self?.onDismiss() }
+        )
+        contentView = NSHostingView(rootView: view)
     }
+
+    // MARK: - Show / Hide
 
     func show() {
         guard !clipboardMonitor.history.isEmpty else { return }
+        pickerState.selectedIndex = 0
 
-        // Center on screen
         if let screen = NSScreen.main {
-            let sw = screen.visibleFrame.width
-            let sh = screen.visibleFrame.height
-            let ox = screen.visibleFrame.origin.x
-            let oy = screen.visibleFrame.origin.y
+            let sf = screen.visibleFrame
             let ww: CGFloat = 480
             let wh: CGFloat = min(CGFloat(44 + clipboardMonitor.history.count * 44), 420)
-            setFrame(NSRect(x: ox + (sw - ww) / 2, y: oy + (sh - wh) / 2, width: ww, height: wh), display: false)
+            setFrame(NSRect(
+                x: sf.origin.x + (sf.width - ww) / 2,
+                y: sf.origin.y + (sf.height - wh) / 2,
+                width: ww, height: wh
+            ), display: false)
         }
 
         makeKeyAndOrderFront(nil)
@@ -77,8 +85,49 @@ class PickerWindow: NSPanel {
         })
     }
 
-    // Forward Esc to dismiss
+    // MARK: - Keyboard
+
+    override func keyDown(with event: NSEvent) {
+        let count = clipboardMonitor.history.count
+        switch event.keyCode {
+        case 126: // Up arrow
+            pickerState.selectedIndex = max(0, pickerState.selectedIndex - 1)
+        case 125: // Down arrow
+            pickerState.selectedIndex = min(count - 1, pickerState.selectedIndex + 1)
+        case 36, 76: // Return / numpad Enter
+            confirmSelection()
+        case 53: // Escape
+            onDismiss()
+        default:
+            if let n = numberFromKeyCode(event.keyCode) {
+                let idx = n == 0 ? 9 : n - 1
+                if idx < count { pickerState.selectedIndex = idx }
+            }
+        }
+    }
+
     override func cancelOperation(_ sender: Any?) {
         onDismiss()
+    }
+
+    private func confirmSelection() {
+        guard pickerState.selectedIndex < clipboardMonitor.history.count else { return }
+        onSelect(clipboardMonitor.history[pickerState.selectedIndex])
+    }
+
+    private func numberFromKeyCode(_ keyCode: UInt16) -> Int? {
+        switch keyCode {
+        case 18: return 1
+        case 19: return 2
+        case 20: return 3
+        case 21: return 4
+        case 23: return 5
+        case 22: return 6
+        case 26: return 7
+        case 28: return 8
+        case 25: return 9
+        case 29: return 0
+        default: return nil
+        }
     }
 }

@@ -42,15 +42,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AA00000000000000000000C7 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				AA00000000000000000000A0 /* clippy.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		AA00000000000000000000C1 /* MainGroup */ = {
+		AA00000000000000000000C1 = {
 			isa = PBXGroup;
 			children = (
 				AA00000000000000000000C2 /* clippy */,
@@ -107,6 +99,14 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
+		AA00000000000000000000C7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000A0 /* clippy.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -137,7 +137,7 @@
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
-					AA00000000000000000000B /* clippy */ = {
+					AA00000000000000000000B = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
@@ -150,7 +150,7 @@
 				en,
 				Base,
 			);
-			mainGroup = AA00000000000000000000C1 /* MainGroup */;
+			mainGroup = AA00000000000000000000C1;
 			productRefGroup = AA00000000000000000000C7 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -189,7 +189,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		AA00000000000000000000F /* Debug (project) */ = {
+		AA00000000000000000000F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -252,7 +252,7 @@
 			};
 			name = Debug;
 		};
-		AA00000000000000000000G /* Release (project) */ = {
+		AA00000000000000000000G /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -306,7 +306,7 @@
 			};
 			name = Release;
 		};
-		AA00000000000000000000H /* Debug (target) */ = {
+		AA00000000000000000000H /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -315,22 +315,23 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V3NZ325R4C;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = clippy/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.clippy.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Debug;
 		};
-		AA00000000000000000000I /* Release (target) */ = {
+		AA00000000000000000000I /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -339,18 +340,19 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V3NZ325R4C;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = clippy/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.clippy.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Release;
 		};
@@ -376,7 +378,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = AA000000000000000000000A /* Project object */;
 }

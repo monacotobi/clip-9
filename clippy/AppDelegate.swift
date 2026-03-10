@@ -48,12 +48,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupPickerWindow() {
         pickerWindow = PickerWindow(clipboardMonitor: clipboardMonitor) { [weak self] selectedText in
-            self?.pickerWindow?.hide()
-            guard let target = self?.previousApp else { return }
+            guard let self else { return }
+            self.pickerWindow?.hide()
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(selectedText, forType: .string)
-            // Brief delay to allow window to hide before pasting
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+
+            // Use the app that was frontmost before picker opened,
+            // or skip paste simulation if opened from menu bar
+            guard let target = self.previousApp else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 PasteSimulator.paste(into: target)
             }
         } onDismiss: { [weak self] in
