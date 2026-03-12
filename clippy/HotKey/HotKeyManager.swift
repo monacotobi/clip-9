@@ -25,10 +25,10 @@ private func tapCallback(
     // Strip everything except the modifiers we care about
     let flags = event.flags.intersection([.maskCommand, .maskShift, .maskAlternate, .maskControl])
 
-    // Cmd+Shift+V only
-    if keyCode == 9, flags == [.maskCommand, .maskShift] {
+    // Cmd+Option+V only
+    if keyCode == 9, flags == [.maskCommand, .maskAlternate] {
         DispatchQueue.main.async { sharedInstance?.fire() }
-        return nil  // ← consume: prevents "Paste and Match Style" reaching the app
+        return nil  // ← consume the event
     }
 
     return Unmanaged.passRetained(event)
