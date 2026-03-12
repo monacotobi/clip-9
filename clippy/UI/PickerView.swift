@@ -49,7 +49,7 @@ struct PickerView: View {
 
     private var headerView: some View {
         HStack(alignment: .center, spacing: 0) {
-            Text("📎 CLIPPY")
+            Text("👾 CLIP-9")
                 .font(.custom(arcadeFont, size: 13).bold())
                 .foregroundColor(Arcade.cyan)
                 .tracking(3)
