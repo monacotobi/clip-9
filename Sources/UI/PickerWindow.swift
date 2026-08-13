@@ -11,8 +11,8 @@ class PickerWindow: NSPanel {
     private let clipboardMonitor: ClipboardMonitor
     private let onSelect: (String) -> Void
     private let onDismiss: () -> Void
-    private let pickerWidth: CGFloat = 480
-    private let outerPadding: CGFloat = 8
+    private let pickerWidth = PickerLayout.width
+    private let outerPadding = PickerLayout.outerPadding
 
     init(
         clipboardMonitor: ClipboardMonitor,
@@ -67,8 +67,11 @@ class PickerWindow: NSPanel {
         if let screen = NSScreen.main {
             let sf = screen.visibleFrame
             let ww: CGFloat = pickerWidth + outerPadding * 2
-            // header(46) + separator(5) + rows(40ea) + footer(28)
-            let contentHeight = min(CGFloat(46 + 5 + clipboardMonitor.history.count * 40 + 28), 440)
+            // Show every item. The only limit is the screen itself — if the history
+            // ever outgrows it, the ScrollView in PickerView takes over.
+            let wanted = PickerLayout.contentHeight(itemCount: clipboardMonitor.history.count)
+            let maxHeight = sf.height - outerPadding * 2 - 40
+            let contentHeight = min(wanted, maxHeight)
             let wh: CGFloat = contentHeight + outerPadding * 2
             setFrame(NSRect(
                 x: sf.origin.x + (sf.width - ww) / 2,
