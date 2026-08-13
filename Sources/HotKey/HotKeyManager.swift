@@ -37,7 +37,14 @@ private func tapCallback(
 class HotKeyManager {
     fileprivate var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private var permissionTimer: Timer?
     private let onTrigger: () -> Void
+
+    /// How often to re-check for Accessibility permission while it is missing.
+    private let permissionPollInterval: TimeInterval = 2.0
+
+    /// True once the event tap is installed and listening for the hotkey.
+    var isActive: Bool { eventTap != nil }
 
     init(onTrigger: @escaping () -> Void) {
         self.onTrigger = onTrigger
@@ -51,13 +58,47 @@ class HotKeyManager {
 
     private func setup() {
         guard AXIsProcessTrusted() else {
-            print("[HotKeyManager] Accessibility not granted — hotkey disabled.")
+            // The user can grant Accessibility while the app is running. Poll for
+            // it instead of silently giving up, which would leave the hotkey dead
+            // until the next launch.
+            print("[HotKeyManager] Accessibility not granted — waiting for permission.")
+            startPermissionPolling()
             return
         }
 
+        installTap()
+    }
+
+    // MARK: - Permission polling
+
+    private func startPermissionPolling() {
+        guard permissionTimer == nil else { return }
+
+        let timer = Timer(timeInterval: permissionPollInterval, repeats: true) { [weak self] _ in
+            guard let self, AXIsProcessTrusted() else { return }
+            self.installTap()
+            // Stop only once the tap is really installed. tapCreate can still fail
+            // after the permission check passes; keep retrying if it does.
+            if self.isActive { self.stopPermissionPolling() }
+        }
+        permissionTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopPermissionPolling() {
+        permissionTimer?.invalidate()
+        permissionTimer = nil
+    }
+
+    // MARK: - Event tap
+
+    private func installTap() {
+        guard eventTap == nil else { return }
+
         let mask = CGEventMask(
             (1 << CGEventType.keyDown.rawValue) |
-            (1 << CGEventType.tapDisabledByTimeout.rawValue)
+            (1 << CGEventType.tapDisabledByTimeout.rawValue) |
+            (1 << CGEventType.tapDisabledByUserInput.rawValue)
         )
 
         guard let tap = CGEvent.tapCreate(
@@ -76,9 +117,11 @@ class HotKeyManager {
         runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
+        print("[HotKeyManager] Hotkey active — Cmd+Option+V.")
     }
 
     private func teardown() {
+        stopPermissionPolling()
         if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: false) }
         if let src = runLoopSource { CFRunLoopRemoveSource(CFRunLoopGetMain(), src, .commonModes) }
         eventTap = nil
