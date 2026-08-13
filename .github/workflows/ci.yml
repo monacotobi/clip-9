@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # Structural check on the project file. Catches a broken restructure
+      # before xcodebuild produces a confusing error.
+      - name: Lint project file
+        run: plutil -lint Clip-9.xcodeproj/project.pbxproj
+
+      # No shared scheme is committed (xcuserdata/ is gitignored), so build the
+      # target directly. -scheme would fail on a fresh clone.
+      #
+      # CONFIGURATION_BUILD_DIR, not -derivedDataPath: xcodebuild rejects
+      # -derivedDataPath unless -scheme is also given.
+      - name: Build
+        run: |
+          xcodebuild -project Clip-9.xcodeproj \
+                     -target Clip-9 \
+                     -configuration Release \
+                     CONFIGURATION_BUILD_DIR="$PWD/build" \
+                     CODE_SIGNING_ALLOWED=NO \
+                     build
+
+      - name: Verify app bundle
+        run: |
+          APP="build/Clip-9.app"
+          test -d "$APP" || { echo "::error::$APP was not produced"; exit 1; }
+          test -x "$APP/Contents/MacOS/Clip-9" || { echo "::error::executable missing"; exit 1; }
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Contents/Info.plist"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Clip-9-app
+          path: build/Clip-9.app
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Release
+        run: |
+          xcodebuild -project Clip-9.xcodeproj \
+                     -target Clip-9 \
+                     -configuration Release \
+                     CONFIGURATION_BUILD_DIR="$PWD/build" \
+                     CODE_SIGNING_ALLOWED=NO \
+                     build
+
+      # ditto preserves the bundle structure and resource forks. Plain `zip`
+      # can corrupt a .app.
+      - name: Package
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent \
+                build/Clip-9.app \
+                Clip-9.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Clip-9.zip
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            1. Download and unzip `Clip-9.zip`.
+            2. Move `Clip-9.app` to Applications.
+            3. **Right-click the app and choose Open** — do not double-click it the
+               first time. This build is unsigned, so macOS warns that the developer
+               cannot be verified. Click Open.
+            4. Grant Accessibility access when asked.
+
+            See the [README](https://github.com/monacotobi/clip-9#why-clip-9-needs-accessibility-access)
+            for what that permission is used for.
