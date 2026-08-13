@@ -29,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clippy")
+            button.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clip-9")
         }
 
         let menu = NSMenu()
@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let accessItem = NSMenuItem(title: "Accessibility Settings...", action: #selector(openAccessibilitySettings), keyEquivalent: "")
         menu.addItem(accessItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit Clippy", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit Clip-9", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         statusItem?.menu = menu
     }
@@ -87,7 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func promptForAccessibility() {
         let alert = NSAlert()
         alert.messageText = "Accessibility Access Required"
-        alert.informativeText = "Clippy needs Accessibility access to register the global hotkey (Cmd+Shift+V) and paste into other apps.\n\nPlease enable it in System Settings > Privacy & Security > Accessibility."
+        alert.informativeText = "Clip-9 needs Accessibility access to register the global hotkey (Cmd+Option+V) and paste into other apps.\n\nPlease enable it in System Settings > Privacy & Security > Accessibility.\n\nThe hotkey starts working as soon as you grant access. No restart needed."
         alert.addButton(withTitle: "Open System Settings")
         alert.addButton(withTitle: "Later")
         alert.alertStyle = .warning

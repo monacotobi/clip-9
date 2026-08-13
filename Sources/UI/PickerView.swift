@@ -82,7 +82,11 @@ struct PickerView: View {
     private var itemsView: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(spacing: 0) {
-                ForEach(Array(monitor.history.enumerated()), id: \.offset) { index, text in
+                // Identify rows by content, not position. History reorders on every
+                // copy, and `id: \.offset` makes SwiftUI animate the wrong rows.
+                // Safe because ClipboardMonitor.add() removes duplicates, so the
+                // strings in `history` are unique.
+                ForEach(Array(monitor.history.enumerated()), id: \.element) { index, text in
                     RowView(
                         index: index,
                         text: text,
