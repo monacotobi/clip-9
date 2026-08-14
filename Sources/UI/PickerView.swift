@@ -11,6 +11,10 @@ private enum Arcade {
     static let rowGlow  = Color(red: 1.0,   green: 0.125, blue: 0.471).opacity(0.08)
     /// Selected-row wash while the picker has no keyboard focus.
     static let inertGlow = Color(red: 0.267, green: 0.267, blue: 0.333).opacity(0.14)
+
+    /// Footer hints. `dimText` on `bg` is roughly 2:1 contrast — fine as decoration,
+    /// unreadable as instructions.
+    static let hintText = Color(white: 0.92)
 }
 
 private let arcadeFont = "Courier New"
@@ -45,6 +49,11 @@ struct PickerView: View {
     @ObservedObject var state: PickerState
     let onSelect: (String) -> Void
     let onDismiss: () -> Void
+
+    /// Set false only by Tools/render-screenshots.sh. A ScrollView renders just its
+    /// visible viewport, and ImageRenderer draws offscreen where there is none — so with
+    /// it on, the README images come out as empty chrome. Everything else is identical.
+    var scrollable: Bool = true
 
     // Blinking cursor ticker
     @State private var cursorOn = true
@@ -120,9 +129,19 @@ struct PickerView: View {
 
     // MARK: Items
 
+    @ViewBuilder
     private var itemsView: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 0) {
+        if scrollable {
+            ScrollView(.vertical, showsIndicators: false) { rows }
+        } else {
+            rows
+        }
+    }
+
+    private var rows: some View {
+        // VStack, not LazyVStack: the list is capped at ClipboardMonitor.maxItems (10),
+        // so laziness buys nothing, and lazy containers also fail to rasterise offscreen.
+        VStack(spacing: 0) {
                 // Identify rows by content, not position. History reorders on every
                 // copy, and `id: \.offset` makes SwiftUI animate the wrong rows.
                 // Safe because ClipboardMonitor.add() removes duplicates, so the
@@ -140,7 +159,6 @@ struct PickerView: View {
                         onSelect(text)
                     }
                 }
-            }
         }
     }
 
@@ -156,10 +174,10 @@ struct PickerView: View {
             Text("·")
             Text("ESC QUIT")
         }
-        .font(.custom(arcadeFont, size: 9).bold())
+        .font(.custom(arcadeFont, size: 10).bold())
         // Dims with the rest of the panel. The hints stay — they are still accurate
         // once you click back in.
-        .foregroundColor(isActive ? Arcade.dimText : Arcade.dimText.opacity(0.5))
+        .foregroundColor(isActive ? Arcade.hintText : Arcade.hintText.opacity(0.35))
         .tracking(1)
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
