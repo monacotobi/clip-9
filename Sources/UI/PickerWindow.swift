@@ -4,6 +4,13 @@ import SwiftUI
 // Shared state between NSPanel (key events) and SwiftUI (rendering)
 class PickerState: ObservableObject {
     @Published var selectedIndex: Int = 0
+
+    /// Whether the panel currently has key status.
+    ///
+    /// The picker is a non-activating panel that stays open when you click away, so it
+    /// can be visible while receiving no keyboard input at all. Without this, an inert
+    /// picker looks identical to a live one.
+    @Published var isKey: Bool = true
 }
 
 class PickerWindow: NSPanel {
@@ -43,6 +50,18 @@ class PickerWindow: NSPanel {
 
     // NSPanel can become key without activating the app
     override var canBecomeKey: Bool { true }
+
+    // MARK: - Key state
+
+    override func becomeKey() {
+        super.becomeKey()
+        pickerState.isKey = true
+    }
+
+    override func resignKey() {
+        super.resignKey()
+        pickerState.isKey = false
+    }
 
     private func setupContent() {
         let view = PickerView(
