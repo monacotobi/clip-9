@@ -5,17 +5,22 @@ item, and it pastes into whatever app you were just using.
 
 The picker keeps your last 10 copied text items and looks like an arcade cabinet.
 
-```
-┌──────────────────────────────────────────┐
-│ 👾 CLIP-9                       5 ITEMS  │
-├──────────────────────────────────────────┤
-│ ► 1  git commit -m "Fix the event tap"   │
-│   2  https://example.com/some/long/url   │
-│   3  Refactor selection state            │
-├──────────────────────────────────────────┤
-│ ↑↓ MOVE · 1-9 JUMP · ENTER SELECT · ESC  │
-└──────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="docs/clip-9.png" alt="The Clip-9 picker showing ten clipboard items, the second selected" width="620">
+</p>
+
+Long items truncate in the **middle**, not the end — URLs and file paths share long
+prefixes, so tail truncation would render distinct items identically.
+
+### It tells you when it is not listening
+
+The picker stays open when you click away, which means it can be on screen while your
+keystrokes go elsewhere. When that happens the neon goes out and the cursor stops blinking,
+so you can see at a glance that Esc and the arrow keys will not reach it.
+
+<p align="center">
+  <img src="docs/clip-9-unfocused.png" alt="The same picker with the keyboard elsewhere: grey chrome, no glow, frozen cursor" width="620">
+</p>
 
 ## Install
 
@@ -97,6 +102,17 @@ To type-check without a full build:
 swiftc -typecheck -sdk "$(xcrun --show-sdk-path)" \
        -target arm64-apple-macosx13.0 Sources/*.swift Sources/*/*.swift
 ```
+
+### Screenshots
+
+The images above are generated, not captured:
+
+```sh
+./Tools/render-screenshots.sh
+```
+
+It compiles the actual `PickerView` and draws it with `ImageRenderer`, so the README shows
+the same code that ships and cannot quietly go stale. Re-run it after any UI change.
 
 ## Limitations
 
