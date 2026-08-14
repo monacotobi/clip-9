@@ -29,7 +29,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clip-9")
+            // Three stacked bars — the same shape as the app icon, so the menu bar and
+            // Finder read as the same app.
+            //
+            // Deliberately a template image (monochrome, tinted by macOS) rather than the
+            // colour icon: menu bar extras have to stay legible on a light menu bar, a
+            // dark one, and translucent over any wallpaper. A dark squircle would be a
+            // blob in light mode.
+            let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .bold)
+            let image = NSImage(systemSymbolName: "line.3.horizontal",
+                                accessibilityDescription: "Clip-9")?
+                .withSymbolConfiguration(config)
+            image?.isTemplate = true
+            button.image = image
         }
 
         let menu = NSMenu()
