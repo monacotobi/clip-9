@@ -70,9 +70,9 @@ authoritative.
 - **The app has no Dock icon.** `LSUIElement` is `true` and the policy is `.accessory`.
 - **The picker must not steal focus.** The panel uses `.nonactivatingPanel`. If it activates
   the app, `previousApp` loses the front position and the paste goes to the wrong place.
-- **Two places hold the row geometry.** `PickerWindow.show()` computes the window height from
-  `46 + 5 + count * 40 + 28`. These numbers mirror the header, separator, row, and footer
-  sizes in `PickerView`. Change both together.
+- **Picker geometry lives in `PickerLayout`** (top of `PickerView.swift`). `PickerWindow`
+  sizes the panel before SwiftUI lays out anything, so it must predict the content height.
+  Both sides read the same constants. Do not reintroduce bare numbers in either file.
 - **The hotkey is Cmd+Option+V** (keyCode 9, `.maskCommand` + `.maskAlternate`). If you change
   it, also update the alert text in `AppDelegate.promptForAccessibility()` and the README.
 - **`DEVELOPMENT_TEAM` is intentionally empty** so contributors and CI can build without a
